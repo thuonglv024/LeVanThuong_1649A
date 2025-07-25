@@ -33,40 +33,70 @@ public class BookstoreApp {
                     inventory.displayStock();
                     break;
                 case 2:
-                    System.out.print("Customer name: ");
-                    String name = sc.nextLine();
-                    System.out.print("Address: ");
-                    String address = sc.nextLine();
+                    System.out.println("Place a New Order");
+
+                    String name;
+                    do {
+                        System.out.print("Customer name: ");
+                        name = sc.nextLine().trim();
+                        if (name.isEmpty()) {
+                            System.out.println("[!] Name cannot be empty. Please enter again.");
+                        }
+                    } while (name.isEmpty());
+
+                    String address;
+                    do {
+                        System.out.print("Address: ");
+                        address = sc.nextLine().trim();
+                        if (address.isEmpty()) {
+                            System.out.println("[!] Address cannot be empty. Please enter again.");
+                        }
+                    } while (address.isEmpty());
+
                     Customer customer = new Customer(name, address);
                     LinkedListADT<Book> orderedBooks = new LinkedListADT<>();
 
                     while (true) {
-                        System.out.print("Book title to buy: ");
-                        String bookName = sc.nextLine();
-                        int qty;
-                        while (true) {
-                            System.out.print("Quantity: ");
-                            String input = sc.nextLine();
+                        String bookName;
+                        do {
+                            System.out.print("Book title to buy: ");
+                            bookName = sc.nextLine().trim();
+                            if (bookName.isEmpty()) {
+                                System.out.println("[!] Book title cannot be empty.");
+                            }
+                        } while (bookName.isEmpty());
+
+                        int qty = -1;
+                        while (qty <= 0) {
+                            System.out.print("Quantity (positive number): ");
+                            String input = sc.nextLine().trim();
                             if (input.matches("\\d+")) {
                                 qty = Integer.parseInt(input);
-                                break;
+                                if (qty <= 0) {
+                                    System.out.println("[!] Quantity must be greater than 0.");
+                                }
                             } else {
-                                System.out.println("[!] Please enter a number.");
+                                System.out.println("[!] Please enter a valid number.");
                             }
                         }
 
                         if (inventory.reduceStock(bookName, qty)) {
                             Book found = inventory.findBook(bookName);
                             orderedBooks.addLast(new Book(found.getTitle(), found.getAuthor(), qty));
+                            System.out.println("Book added to order.");
                         } else {
                             System.out.println("Not enough stock or book not found.");
                         }
+
                         System.out.print("Add more books? (y/n): ");
                         if (!sc.nextLine().equalsIgnoreCase("y")) break;
                     }
+
                     orders.addLast(new Order(customer, orderedBooks));
-                    System.out.println("Order created for " + name);
+                    System.out.println("Order created successfully for " + name);
+
                     break;
+
                 case 3:
                     System.out.print("Customer name: ");
                     String searchName = sc.nextLine();
@@ -102,12 +132,66 @@ public class BookstoreApp {
                     break;
 
                 case 5:
-                    Book newBook = inventory.addBookViaInput();
-                    if (newBook != null) {
-                        importHistory.push(newBook);
-                        System.out.println("Book imported and saved to history.");
+                    String title = "";
+                    String author = "";
+                    int quantity = 0;
+
+                    // input title
+                    while (true) {
+                        System.out.print("Book title: ");
+                        title = sc.nextLine().trim();
+                        if (title.isEmpty()) {
+                            System.out.println("[!] Title cannot be empty. Please re-enter.");
+                        } else {
+                            break;
+                        }
                     }
+
+                    // input author
+                    while (true) {
+                        System.out.print("Author: ");
+                        author = sc.nextLine().trim();
+                        if (author.isEmpty()) {
+                            System.out.println("[!] Author cannot be empty. Please re-enter.");
+                        } else {
+                            break;
+                        }
+                    }
+
+                    // input quantity
+                    while (true) {
+                        System.out.print("Quantity: ");
+                        String input = sc.nextLine().trim();
+                        if (input.isEmpty()) {
+                            System.out.println("[!] Quantity cannot be empty. Please re-enter.");
+                            continue;
+                        }
+                        if (!input.matches("\\d+")) {
+                            System.out.println("[!] Quantity must be a positive integer.");
+                            continue;
+                        }
+                        quantity = Integer.parseInt(input);
+                        if (quantity <= 0) {
+                            System.out.println("[!] Quantity must be greater than 0.");
+                        } else {
+                            break;
+                        }
+                    }
+
+                    // check and update inventory
+                    Book existing = inventory.findBook(title);
+                    Book newBook = new Book(title, author, quantity);
+
+                    if (existing != null) {
+                        existing.setQuantity(existing.getQuantity() + quantity);
+                    } else {
+                        inventory.getStock().addLast(newBook);
+                    }
+
+                    importHistory.push(newBook);
+                    System.out.println("Book imported and saved to history.");
                     break;
+
                 case 6:
                     if (!importHistory.isEmpty()) {
                         Book undoBook = importHistory.pop();
